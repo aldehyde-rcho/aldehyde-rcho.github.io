@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href="//cdn.staticfile.net/Primer/21.0.7/primer.css" rel="stylesheet" />
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="Scikit-image中的几何变换">
+<title>Scikit-image中的几何变换</title>
+<link href="//unpkg.com/@wooorm/starry-night@2.1.1/style/both.css" rel="stylesheet" />
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Scikit-image中的几何变换</h1>
+<div class="title-right">
+    <a href="https://aldehyde-rcho.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/aldehyde-rcho/aldehyde-rcho.github.io/issues/5" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>用skimage的时候有点想不明白，干脆review了一下<a href="https://github.com/scikit-image/scikit-image/blob/v0.22.0/skimage/transform/_geometric.py">源代码</a>。不多废话直接上菜</p>
+<h1><code class="notranslate">Class _GeometricTransform</code></h1>
+<p>几何变换。<br>
+包含于<code class="notranslate">transform._geometric</code>中<br>
+继承于<code class="notranslate">abc.ABC</code>.</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-c1">&gt;&gt;</span><span class="pl-c1">&gt;</span> <span class="pl-k">import</span> <span class="pl-s1">abc</span>
+<span class="pl-c1">&gt;&gt;</span><span class="pl-c1">&gt;</span> <span class="pl-s1">abc</span>.<span class="pl-s1">__doc__</span>
+<span class="pl-s">'Abstract Base Classes (ABCs) according to PEP 3119.'</span></pre></div>
+<p>从抽象基类之中继承而来。<br>
+定义接口<code class="notranslate">__call__(self,coords) return coords</code>参数包含变换前后的坐标<br>
+定义接口<code class="notranslate">inverse(self)</code>（逆运算）和<code class="notranslate">residuals(self, src, dst)</code>（残差运算，计算变换的误差，返回源坐标和目标坐标的方差）</p>
+<h1><code class="notranslate">Class  ProjectiveTransform</code></h1>
+<p>投影变换。</p>
+<p>继承自<code class="notranslate">_GeometricTransform</code></p>
+<p>数学表示为一个3x3的矩阵。</p>
+<p>对一个齐次坐标$\mathbf{x} = [x, y, 1]^T$，应用如下的变换矩阵：<br>
+$$<br>
+\begin{bmatrix}<br>
+a_0&amp;a_1&amp;a_2\<br>
+b_0&amp;b_1&amp;b_2\<br>
+c_0&amp;c_1&amp;1<br>
+\end{bmatrix}<br>
+$$<br>
+可以表示<strong>平移、旋转、缩放、错切、透视投影</strong>等各种几何变换。</p>
+<p>其中储存的属性为<code class="notranslate">self.params</code>，具体存储了一个正交变换矩阵，即维数+1的方阵。</p>
+<p>初始化传入参数为如上的矩阵及可选的维数（仅当传入的matrix为空时，利用维数创造一个恒等变换矩阵）。</p>
+<p>如果需要打印矩阵可以按需调取<code class="notranslate">__nice__ __repr__ __str__</code>这几种方法</p>
+<p>它 和它的继承类都实现了<code class="notranslate">estimate(self,src,dst)</code>这个方法，用于估测变换是否</p>
+<h1><code class="notranslate">Class AffineTransform</code></h1>
+<p>仿射变换。</p>
+<p>继承自<code class="notranslate">ProjectiveTransform</code></p>
+<p>仿射变换有如下的形式：</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-v">X</span> <span class="pl-c1">=</span> <span class="pl-s1">a0</span> <span class="pl-c1">*</span> <span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-s1">a1</span> <span class="pl-c1">*</span> <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-s1">a2</span><span class="pl-s1"></span>
+  <span class="pl-c1">=</span>   <span class="pl-s1">scale_x</span> <span class="pl-c1">*</span> <span class="pl-s1">x</span> <span class="pl-c1">*</span> [<span class="pl-en">cos</span>(<span class="pl-s1">rotation</span>) <span class="pl-c1">+</span> <span class="pl-en">tan</span>(<span class="pl-s1">shear_y</span>) <span class="pl-c1">*</span> <span class="pl-en">sin</span>(<span class="pl-s1">rotation</span>)]
+    <span class="pl-c1">-</span> <span class="pl-s1">scale_y</span> <span class="pl-c1">*</span> <span class="pl-s1">y</span> <span class="pl-c1">*</span> [<span class="pl-en">tan</span>(<span class="pl-s1">shear_x</span>) <span class="pl-c1">*</span> <span class="pl-en">cos</span>(<span class="pl-s1">rotation</span>) <span class="pl-c1">+</span> <span class="pl-en">sin</span>(<span class="pl-s1">rotation</span>)]
+    <span class="pl-c1">+</span> <span class="pl-s1">translation_x</span>
+
+<span class="pl-v">Y</span> <span class="pl-c1">=</span> <span class="pl-s1">b0</span> <span class="pl-c1">*</span> <span class="pl-s1">x</span> <span class="pl-c1">+</span> <span class="pl-s1">b1</span> <span class="pl-c1">*</span> <span class="pl-s1">y</span> <span class="pl-c1">+</span> <span class="pl-s1">b2</span>
+  <span class="pl-c1">=</span>   <span class="pl-s1">scale_x</span> <span class="pl-c1">*</span> <span class="pl-s1">x</span> <span class="pl-c1">*</span> [<span class="pl-en">sin</span>(<span class="pl-s1">rotation</span>) <span class="pl-c1">-</span> <span class="pl-en">tan</span>(<span class="pl-s1">shear_y</span>) <span class="pl-c1">*</span> <span class="pl-en">cos</span>(<span class="pl-s1">rotation</span>)]
+    <span class="pl-c1">-</span> <span class="pl-s1">scale_y</span> <span class="pl-c1">*</span> <span class="pl-s1">y</span> <span class="pl-c1">*</span> [<span class="pl-en">tan</span>(<span class="pl-s1">shear_x</span>) <span class="pl-c1">*</span> <span class="pl-en">sin</span>(<span class="pl-s1">rotation</span>) <span class="pl-c1">-</span> <span class="pl-en">cos</span>(<span class="pl-s1">rotation</span>)]
+    <span class="pl-c1">+</span> <span class="pl-s1">translation_y</span></pre></div>
+<p>变换的矩阵表示为：<br>
+$$<br>
+\begin{bmatrix}<br>
+a_0&amp;a_1&amp;a_2\<br>
+b_0&amp;b_1&amp;b_2\<br>
+0&amp;0&amp;1<br>
+\end{bmatrix}<br>
+$$</p>
+<p>这个类型写的实在太漂亮了我要在这里放一个<a href="https://github.com/scikit-image/scikit-image/blob/v0.22.0/skimage/transform/_geometric.py#L807-L1004">链接</a></p>
+<div class="highlight highlight-source-python"><pre class="notranslate">    <span class="pl-k">def</span> <span class="pl-en">__init__</span>(
+        <span class="pl-s1">self</span>,
+        <span class="pl-s1">matrix</span><span class="pl-c1">=</span><span class="pl-c1">None</span>,
+        <span class="pl-s1">scale</span><span class="pl-c1">=</span><span class="pl-c1">None</span>,
+        <span class="pl-s1">rotation</span><span class="pl-c1">=</span><span class="pl-c1">None</span>,
+        <span class="pl-s1">shear</span><span class="pl-c1">=</span><span class="pl-c1">None</span>,
+        <span class="pl-s1">translation</span><span class="pl-c1">=</span><span class="pl-c1">None</span>,
+        <span class="pl-c1">*</span>,
+        <span class="pl-s1">dimensionality</span><span class="pl-c1">=</span><span class="pl-c1">2</span>,
+    ):</pre></div>
+<p>传入的参数包括各种 变换方式，维度的值必须用keyword的形式传入。</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-s1">params</span> <span class="pl-c1">=</span> <span class="pl-en">any</span>(
+    <span class="pl-s1">param</span> <span class="pl-c1">is</span> <span class="pl-c1">not</span> <span class="pl-c1">None</span> <span class="pl-k">for</span> <span class="pl-s1">param</span> <span class="pl-c1">in</span> (<span class="pl-s1">scale</span>, <span class="pl-s1">rotation</span>, <span class="pl-s1">shear</span>, <span class="pl-s1">translation</span>)
+)</pre></div>
+<p>这一部分代码精炼而明确，<code class="notranslate">params</code>暂时储存一个布尔值，缩放、旋转、剪切、平移等参数只要<strong>非全为空</strong>就将<code class="notranslate">params</code>置为<code class="notranslate">True</code></p>
+<p>随后处理了一部分可能出现的异常之后，分别对每一种传入的变换进行处理。这里用到一个<code class="notranslate">numpy</code>中的方法<code class="notranslate">np.isscalar()</code>。这个方法检查是否为标量。</p>
+<div class="highlight highlight-source-python"><pre class="notranslate"><span class="pl-k">if</span> <span class="pl-s1">np</span>.<span class="pl-en">isscalar</span>(<span class="pl-s1">scale</span>):
+    <span class="pl-s1">sx</span> <span class="pl-c1">=</span> <span class="pl-s1">sy</span> <span class="pl-c1">=</span> <span class="pl-s1">scale</span>
+<span class="pl-k">else</span>:
+    <span class="pl-s1">sx</span>, <span class="pl-s1">sy</span> <span class="pl-c1">=</span> <span class="pl-s1">scale</span></pre></div>
+<p>随后把所有运算组装成上面所述的矩阵形式，然后存在<code class="notranslate">self.params</code>中。若无参数传入则保存一个恒等变换的矩阵。</p>
+<p><strong>注意</strong> 这个类型实例化时不能同时传入<code class="notranslate">matrix</code>和后面其他的任何参数，会发生冲突。如果传入<code class="notranslate">matrix</code>则无法调用<code class="notranslate">rotation</code>等方法访问获取这个变换做的操作是什么。</p>
+<h1><code class="notranslate">Class EuclideanTransform</code></h1>
+<p>欧几里得变换，又称刚体变换</p>
+<p>继承自<code class="notranslate">ProjectiveTransform</code></p>
+<p>只包括二维图像的<strong>平移</strong>和<strong>旋转</strong>，不改变图像自身形状。齐次变换矩阵形式为：<br>
+$$<br>
+\begin{bmatrix}<br>
+a_0&amp;-b_0&amp;a_1\<br>
+b_0&amp;a_0&amp;b_1\<br>
+0&amp;0&amp;1<br>
+\end{bmatrix}<br>
+$$<br>
+即，<br>
+$$<br>
+\begin{bmatrix}<br>
+\cos\theta&amp;-\sin\theta&amp;t_x\<br>
+\sin\theta&amp;\cos\theta&amp;t_y\<br>
+0&amp;0&amp;1<br>
+\end{bmatrix}<br>
+$$</p>
+<h1><code class="notranslate">Class SimilarityTransform</code></h1>
+<p>相似性变换。</p>
+<p>继承自<code class="notranslate">EuclideanTransform</code></p>
+<p>包含二维图像的<strong>缩放</strong>、<strong>平移</strong>、<strong>旋转</strong>。并且缩放必须是x和y方向一致。<br>
+$$<br>
+\begin{bmatrix}<br>
+a_0&amp;-b_0&amp;a_1\<br>
+b_0&amp;a_0&amp;b_1\<br>
+0&amp;0&amp;1<br>
+\end{bmatrix}<br>
+$$<br>
+抑或是：<br>
+$$<br>
+\begin{bmatrix}<br>
+\cos\theta \times s&amp;-\sin\theta \times s&amp;t_x\<br>
+\sin\theta \times s&amp;\cos\theta \times s&amp;t_y\<br>
+0&amp;0&amp;1<br>
+\end{bmatrix}<br>
+$$</p>
+<h1>相机变换，基本变换和本质变换</h1>
+<h2><code class="notranslate">Class FundamentalMatrixTransform</code></h2>
+<p>基本矩阵变换。这个概念本身用于描述两个相机视角之间的基础矩阵变换。</p>
+<ol>
+<li>基础矩阵是一个 3x3 的矩阵。</li>
+<li>基础矩阵描述了一个相机视角到另一个相机视角的投影关系。</li>
+<li>基础矩阵满足对极约束，即任意点在一个相机视角中的投影点与在另一个相机视角中的投影点连线与基础矩阵乘积为零。</li>
+</ol>
+<p>继承自<code class="notranslate">_GeometricTransform</code></p>
+<p>实现三维变换矩阵（2D坐标，3x3矩阵）</p>
+<blockquote>
+<p>类中提供了从源点和目标点估计变换矩阵、计算Sampson距离以及应用逆变换的方法。<code class="notranslate">params</code> 属性存储了基础矩阵。</p>
+<ul>
+<li><code class="notranslate">__init__</code> 方法使用可选的（3x3）变换矩阵初始化 <code class="notranslate">FundamentalMatrixTransform</code> 对象。</li>
+<li><code class="notranslate">__call__</code> 方法将前向变换应用到给定坐标上。</li>
+<li><code class="notranslate">inverse</code> 属性返回代表逆变换的对象。（<code class="notranslate">@property</code>修饰。正交矩阵逆变换即取矩阵的转置）</li>
+<li><code class="notranslate">estimate</code> 方法使用8点算法，根据源点和目标点估计基础矩阵。</li>
+<li><code class="notranslate">residuals</code> 方法计算Sampson距离，这是一个基于源点和目标点的几何误差近似值。</li>
+</ul>
+</blockquote>
+<p>而我们需要关注的是，这一部分代码实现了<code class="notranslate">EssentialMatrixTransform</code>的基础。</p>
+<h2><code class="notranslate">Class EssentialMatrixTransform</code></h2>
+<p>继承自<code class="notranslate">FundamentalMatrixTransform</code>。</p>
+<p>还是关注于图像校准中一对图像的矩阵关系。</p>
+<p>在<code class="notranslate">FundamentalMatrixTransform</code>的基础上增加了相机的<code class="notranslate">rotation</code>和<code class="notranslate">translation</code></p>
+<p>另外，还有两个图像变换的方法是 <code class="notranslate">PiecewiseAffineTransform</code>和<code class="notranslate">PolynomialTransform</code>。分段仿射变换即对不同的片段分别应用仿射变换。PolynomialTransform则提供一个接口可以让使用者自行定制多项式变换的内容。</p>
+<p>在<code class="notranslate">skimage.transform._geometric</code>中的各类变换继承关系如下：</p>
+<div class="highlight highlight-source-mermaid"><pre class="notranslate"><span class="pl-k">flowchart</span> <span class="pl-c1">LR</span>
+	<span class="pl-ent">GEO</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>_GeometricTransform<span class="pl-pds"><span class="pl-sg">]</span></span></span><span class="pl-k">--&gt;</span><span class="pl-ent">PRO</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>ProjectiveTransform<span class="pl-pds"><span class="pl-sg">]</span></span></span><span class="pl-k">--&gt;</span><span class="pl-ent">AFF</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>AffineTransform<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+	<span class="pl-ent">PRO</span><span class="pl-k">--&gt;</span><span class="pl-ent">EUC</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>EuclideanTransform<span class="pl-pds"><span class="pl-sg">]</span></span></span><span class="pl-k">--&gt;</span><span class="pl-ent">SIM</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>SimilarityTransform<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+	<span class="pl-ent">GEO</span><span class="pl-k">--&gt;</span><span class="pl-ent">FUN</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>FundamentalMatrixTransform<span class="pl-pds"><span class="pl-sg">]</span></span></span><span class="pl-k">--&gt;</span><span class="pl-ent">ESS</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>EssentialMatrixTransform<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+	<span class="pl-ent">GEO</span><span class="pl-k">--&gt;</span><span class="pl-ent">PIE</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>PiecewiseAffineTransform<span class="pl-pds"><span class="pl-sg">]</span></span></span>
+	<span class="pl-ent">GEO</span><span class="pl-k">--&gt;</span><span class="pl-ent">POL</span><span class="pl-s"><span class="pl-pds"><span class="pl-sg">[</span></span>PolynomialTransform<span class="pl-pds"><span class="pl-sg">]</span></span></span></pre></div></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+</div>
+    <div id="footer">Copyright © <span id="year"></span><a href="https://aldehyde-rcho.github.io"> 醛基的博客 </a>
+<p>
+<span id="runday"></span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a>
+</p>
+
+<script>
+if(""!=""){
+    var now=new Date();
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("year").innerHTML=now.getFullYear();
+    if(""!=""){document.getElementById("runday").innerHTML=" • "+"网站运行"+diffDay+"天"+" • ";}
+    else{document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";}
+}
+</script>
+</div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n\n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","aldehyde-rcho/aldehyde-rcho.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+</script>
+
+
+
+</html>
